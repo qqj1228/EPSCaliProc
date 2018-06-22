@@ -26,10 +26,13 @@ namespace EPSCaliProc {
         }
 
         VciClient Vci;
+        protected VciEPBApp EPBApp;
         readonly LogBox Log;
 
         public EPB(string StrDirTrace, string StrDirXML, string StrVIN, bool IsClearCali, bool IsRepeatCali, int RetrialTimes, LogBox Log) {
             Vci = new VciClient(StrDirTrace, StrDirXML, Log);
+            EPBApp = new VciEPBApp(Log);
+
             IsClientRun = false;
             this.StrVIN = StrVIN;
             this.IsClearCali = IsClearCali;
@@ -85,189 +88,132 @@ namespace EPSCaliProc {
             IsClientRun = false;
         }
 
-        int DiagSessionControl(byte mode) {
-            int iRet = vciApp.AppServer.EV6S_EPB_DiagSessionControl(mode);
-            Log.ShowLog(string.Format("===> EV6S_EPB_DiagSessionControl({0}), iRet = {1}", mode, iRet));
-            if (iRet == 0) {
-                Log.ShowLog(string.Format("===> EV6S_EPB_DiagSessionControl({0}) success", mode));
-            } else {
-                Log.ShowLog(string.Format("===> EV6S_EPB_DiagSessionControl({0}) failed", mode), LogBox.Level.error);
-            }
-            return iRet;
-        }
+        int DoCail(int rid, byte[] Data, int iDataLen, ref byte[] RecvData, ref int RetLen) {
+            int iRet = 0;
 
-        int TestPresent() {
-            int iRet = vciApp.AppServer.EV6S_EPB_TestPresent();
-            Log.ShowLog(string.Format("===> EV6S_EPB_TestPresent(), iRet = {0}", iRet));
-            if (iRet == 0) {
-                Log.ShowLog(string.Format("===> EV6S_EPB_TestPresent() success"));
-            } else {
-                Log.ShowLog(string.Format("===> EV6S_EPB_TestPresent() failed"), LogBox.Level.error);
-            }
-            return iRet;
-        }
+            iRet = EPBApp.DiagSessionControl(3);
+            iRet = EPBApp.RoutineControl(0x01, rid, Data, iDataLen, ref RecvData, ref RetLen);
 
-        int ReadDataByID(int did, ref byte[] RecvData, ref int RetLen) {
-            int iRet = vciApp.AppServer.EV6S_EPB_ReadDataByIdentifier(did, ref RecvData, ref RetLen);
-            Log.ShowLog(string.Format("===> EV6S_EPB_ReadDataByIdentifier(), did = 0x{0:X4}, iRet = {1}", did, iRet));
-            if (iRet == 0) {
-                Log.ShowLog(string.Format("===> EV6S_EPB_ReadDataByIdentifier() success"));
-            } else {
-                Log.ShowLog(string.Format("===> EV6S_EPB_ReadDataByIdentifier() failed"), LogBox.Level.error);
-            }
-            return iRet;
-        }
+            int times = 0;
+            while (times <= RetrialTimes) {
+                // 等待300ms
+                Thread.Sleep(300);
 
-        int UnlockECU() {
-            int iRet = vciApp.AppServer.EV6S_EPB_UnlockECU();
-            Log.ShowLog(string.Format("===> EV6S_EPB_UnlockECU(), iRet = {0}", iRet));
-            if (iRet == 0) {
-                Log.ShowLog(string.Format("===> EV6S_EPB_UnlockECU() success"));
-            } else {
-                Log.ShowLog(string.Format("===> EV6S_EPB_UnlockECU() failed"), LogBox.Level.error);
-            }
-            return iRet;
-        }
+                // 请求例程结果
+                Data[0] = 0;
+                iDataLen = 0;
+                iRet = EPBApp.RoutineControl(0x03, rid, Data, iDataLen, ref RecvData, ref RetLen);
 
-        int RoutineControl(byte option, int rid, byte[] Data, int dataLen, ref byte[] RecvData, ref int RetLen) {
-            int iRet = vciApp.AppServer.EV6S_EPB_RoutineControl(option, rid, Data, dataLen, ref RecvData, ref RetLen);
-            Log.ShowLog(string.Format("===> EV6S_EPB_RoutineControl(), option = 0x{0:X2}, rid = 0x{1:X4}, iRet = {2}", option, rid, iRet));
-            if (iRet == 0) {
-                Log.ShowLog(string.Format("===> EV6S_EPB_RoutineControl() success"));
-            } else {
-                Log.ShowLog(string.Format("===> EV6S_EPB_RoutineControl() failed"), LogBox.Level.error);
-            }
-            return iRet;
-        }
-
-        int ClearDTC() {
-            int iRet = vciApp.AppServer.EV6S_EPB_ClearDTC();
-            Log.ShowLog(string.Format("===> EV6S_EPB_ClearDTC(), iRet = {0}", iRet));
-            if (iRet == 0) {
-                Log.ShowLog(string.Format("===> EV6S_EPB_ClearDTC() success"));
-            } else {
-                Log.ShowLog(string.Format("===> EV6S_EPB_ClearDTC() failed"), LogBox.Level.error);
-            }
-            return iRet;
-        }
-
-        int ReadAllDTC(ref int NumOfDTC, ref byte[] RecvData, ref int RetLen) {
-            int iRet = vciApp.AppServer.EV6S_EPB_ReadAllDTC(ref NumOfDTC, ref RecvData, ref RetLen);
-            Log.ShowLog(string.Format("===> EV6S_EPB_ReadAllDTC(), iRet = {0}", iRet));
-            if (iRet == 0) {
-                Log.ShowLog(string.Format("===> EV6S_EPB_ReadAllDTC() success"));
-            } else {
-                Log.ShowLog(string.Format("===> EV6S_EPB_ReadAllDTC() failed"), LogBox.Level.error);
+                // 判断例程结果
+                if (RetLen == 1) {
+                    if (RecvData[0] == 0x10) {
+                        // 例程正确结束, 记录后退出标定
+                        DataBase.WriteResult("EPBCaliProc", StrVIN, RecvData[0], "");
+                        Log.ShowLog(string.Format("===> Finished Routine:0x{0:X4} with success", rid));
+                        break;
+                    } else if (RecvData[0] == 0xC0) {
+                        // 例程仍在运行, 等待其结束
+                        Log.ShowLog(string.Format("===> 0x{0:X4}:RoutineRunning", rid));
+                        continue;
+                    } else if (RecvData[0] == 0x40) {
+                        // 例程错误结束
+                        DataBase.WriteResult("EPBCaliProc", StrVIN, RecvData[0], "");
+                        Log.ShowLog(string.Format("===> 0x{0:X4}:RoutineFinishedWithFailure", rid), LogBox.Level.error);
+                        if (IsRepeatCali) {
+                            // 若需要重试的话, 等待三秒后重试
+                            ++times;
+                            Log.ShowLog(string.Format("===> Retry Routine:0x{0:X4} {1} time(s)", rid, times), LogBox.Level.error);
+                            Thread.Sleep(2400);
+                            continue;
+                        } else {
+                            // 不需要重试的话, 退出标定
+                            Log.ShowLog(string.Format("===> Finished Routine:0x{0:X4} with failure", rid), LogBox.Level.error);
+                            break;
+                        }
+                    } else {
+                        // 未知错误, 记录后退出标定
+                        DataBase.WriteResult("EPBCaliProc", StrVIN, RecvData[0], "");
+                        Log.ShowLog(string.Format("===> Finished Routine:0x{0:X4} with failure", rid), LogBox.Level.error);
+                        break;
+                    }
+                } else {
+                    // 例程出错未运行, 记录后退出标定
+                    DataBase.WriteResult("EPBCaliProc", StrVIN, RecvData[0], "");
+                    Log.ShowLog(string.Format("===> 0x{0:X4}:RoutineNotRunning", rid), LogBox.Level.error);
+                    break;
+                }
             }
             return iRet;
         }
 
         void EPBCaliRun() {
             int iRet = 0;
-            byte[] RecvData = new byte[200];
+            byte[] RecvData = new byte[500];
             int RetLen = 0;
 
-            // step 1
-            iRet = DiagSessionControl(1);
+            iRet = EPBApp.DiagSessionControl(1);
+            iRet = EPBApp.TestPresent();
+            iRet = EPBApp.DiagSessionControl(3);
 
-            // step 2
-            iRet = TestPresent();
-            iRet = DiagSessionControl(3);
-
-            // step 3
-            //int did = 0xF18C;
-            //string ECU_SN = "";
-            //iRet = ReadDataByID(did, ref RecvData, ref RetLen);
-            //if (iRet == 0) {
-            //    for (int i = 0; i < RetLen; i++) {
-            //        ECU_SN += (char)RecvData[i];
-            //    }
-            //    ShowLog(string.Format("===> ECU_SN = {0}", ECU_SN));
-            //}
-
-            // step 4
-            iRet = UnlockECU();
-            iRet = TestPresent();
-
-            byte option = 0;
-            int rid = 0;
-            byte[] Data = new byte[20];
-            int dataLen = 0;
-
-            // undefined
-            if (IsClearCali) {
-                option = 0x01;
-                rid = 0x0101;
-                iRet = RoutineControl(option, rid, Data, dataLen, ref RecvData, ref RetLen);
+            // 获取EPB软件版本号
+            int did = 0xF195;
+            string SoftwareVer = "";
+            iRet = EPBApp.ReadDataByID(did, ref RecvData, ref RetLen);
+            if (iRet == 0) {
+                for (int i = 0; i < RetLen; i++) {
+                    SoftwareVer += (char)RecvData[i];
+                }
+                Log.ShowLog(string.Format("===> Software Version: {0}", SoftwareVer));
+            }
+            // 获取EPB硬件版本号
+            did = 0xF192;
+            string HardwareVer = "";
+            iRet = EPBApp.ReadDataByID(did, ref RecvData, ref RetLen);
+            if (iRet == 0) {
+                for (int i = 0; i < RetLen; i++) {
+                    HardwareVer += (char)RecvData[i];
+                }
+                Log.ShowLog(string.Format("===> Hardware Version: {0}", HardwareVer));
             }
 
-            // step 5
-            option = 0x01;
-            rid = 0x0100;
-            iRet = RoutineControl(option, rid, Data, dataLen, ref RecvData, ref RetLen);
+            // 设置EPB系统安全访问模式
+            iRet = EPBApp.UnlockECU();
+            iRet = EPBApp.TestPresent();
 
-            int times = 0;
-            while (times < RetrialTimes) {
-                // step 6
-                Thread.Sleep(300);
+            int rid = 0;
+            byte[] Data = new byte[20];
+            int iDataLen = 0;
 
-                // step 7
-                option = 0x03;
-                rid = 0x0100;
-                iRet = RoutineControl(option, rid, Data, dataLen, ref RecvData, ref RetLen);
+            // G-sensor倾角标定
+            rid = 0x2008;
+            Data[0] = 1;
+            iDataLen = 1;
+            iRet = DoCail(rid, Data, iDataLen, ref RecvData, ref RetLen);
 
-                // step 8
-                if (RetLen == 1) {
-                    if (RecvData[0] == 0x01) {
-                        // the calibration is done
-                        // step 9
-                        option = 0x02;
-                        rid = 0x0100;
-                        iRet = RoutineControl(option, rid, Data, dataLen, ref RecvData, ref RetLen);
+            // Assembly check 测试
+            rid = 0x200A;
+            Data[0] = 0;
+            iDataLen = 0;
+            iRet = DoCail(rid, Data, iDataLen, ref RecvData, ref RetLen);
 
-                        // step 11
-                        iRet = ClearDTC();
+            // 清除系统故障
+            iRet = EPBApp.ClearDTC();
 
-                        // step 12
-                        int NumOfDTC = 0;
-                        int DTC = 0;
-                        byte Status = 0;
-                        int j = 0;
-                        iRet = ReadAllDTC(ref NumOfDTC, ref RecvData, ref RetLen);
-
-                        // step 13
-                        if (NumOfDTC > 0) {
-                            string strData = "===> Number of DTC = {0}" + NumOfDTC.ToString();
-                            for (int i = 0; i < NumOfDTC; i++) {
-                                DTC = ((RecvData[i * 4] << 16) + (RecvData[(i * 4) + 1] << 8) + RecvData[(i * 4) + 2]);
-                                Status = RecvData[(i * 4) + 3];
-                                j = i + 1;
-                                strData += ", DTC[" + j.ToString() + "] = 0x" + DTC.ToString("X6") + " - 0x" + Status.ToString("X2");
-                            }
-                            Log.ShowLog(strData);
-                            DataBase.WriteResult("EPSCaliProc", StrVIN, 1, Vci.DTCToString(NumOfDTC, RecvData));
-                        } else {
-                            DataBase.WriteResult("EPSCaliProc", StrVIN, 1, "");
-                        }
-                        break;
-                    } else if (RecvData[0] > 0x80) {
-                        // an error occurred
-                        //ShowLog(string.Format("===> {0}", GetErrorMessage(RecvData[0])), LogBox.Level.error);
-                        DataBase.WriteResult("EPSCaliProc", StrVIN, RecvData[0], "");
-                        if (IsRepeatCali) {
-                            // step 20
-                            Thread.Sleep(2400);
-                            continue;
-                        }
-                    }
-                    // If RecvData[0] > 0x01 and < 0x80
-                    // the ECU is still working on the calibration stage and not finished yet
+            // 设置出厂模式
+            iRet = EPBApp.UnlockECU();
+            did = 0x0110;
+            Data[0] = 0xFF;
+            iDataLen = 1;
+            iRet = EPBApp.WriteDataByID(did, Data, iDataLen);
+            if (iRet == 0) {
+                iRet = EPBApp.ReadDataByID(did, ref RecvData, ref RetLen);
+                if (iRet == 0 && RetLen == 1 && RecvData[0] == 0xFF) {
+                    Log.ShowLog("===> 设置出厂模式成功");
                 } else {
-                    // an error occurred
-                    //ShowLog(string.Format("===> {0}", GetErrorMessage(RecvData[0])), LogBox.Level.error);
-                    DataBase.WriteResult("EPSCaliProc", StrVIN, RecvData[0], "");
-                    break;
+                    Log.ShowLog("===> 读取出厂模式失败", LogBox.Level.error);
                 }
+            } else {
+                Log.ShowLog("===> 设置出厂模式失败", LogBox.Level.error);
             }
         }
 

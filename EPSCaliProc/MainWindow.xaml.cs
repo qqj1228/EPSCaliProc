@@ -25,7 +25,6 @@ namespace EPSCaliProc {
     /// MainWindow.xaml 的交互逻辑
     /// </summary>
     public partial class MainWindow : Window {
-        //ObservableCollection<string> Log { get; set; }
         LogBox Log { get; set; }
         public EPS EPSCali { get; set; }
         public EPB EPBCali { get; set; }
@@ -105,7 +104,7 @@ namespace EPSCaliProc {
         readonly RichTextBox rbxLog;
         readonly FlowDocument rbxDoc;
         readonly Dispatcher dp;
-        readonly Paragraph para;
+        Paragraph Para { get; set; }
 
         public enum Level {
             error,
@@ -116,8 +115,8 @@ namespace EPSCaliProc {
             this.rbxLog = rbxLog;
             this.rbxDoc = rbxDoc;
             this.dp = this.rbxLog.Dispatcher;
-            this.para = new Paragraph();
-            this.rbxDoc.Blocks.Add(para);
+            this.Para = new Paragraph();
+            this.rbxDoc.Blocks.Add(Para);
         }
 
         public void ShowLog(string strLog, Level le = Level.info) {
@@ -126,7 +125,7 @@ namespace EPSCaliProc {
                 if (le == Level.error) {
                     run.Foreground = new SolidColorBrush(Colors.Red);
                 }
-                this.para.Inlines.Add(run);
+                this.Para.Inlines.Add(run);
                 this.rbxLog.ScrollToEnd();
             }));
         }
@@ -134,6 +133,11 @@ namespace EPSCaliProc {
         public void ClearLog() {
             this.dp.Invoke(new Action(() => {
                 this.rbxDoc.Blocks.Clear();
+                // 调用Blocks.Clear()会移除Block内原有的Paragraph（原Paragraph仍然存在，只是不在Block内了）
+                // 若需要写入新内容的话，需要新建Paragraph, 再加入Block中
+                // 若不新建Paragraph, 仍旧使用原来的Paragraph加入Block中的话,原先的内容还会显示在RichTextBox内
+                this.Para = new Paragraph();
+                this.rbxDoc.Blocks.Add(Para);
             }));
         }
     }

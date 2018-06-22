@@ -75,7 +75,7 @@ namespace EPSCaliProc {
             StrSQL += StrVIN + "', '";
             StrSQL += DateTime.Now.ToString("yyyy-MM-dd") + "', '";
             StrSQL += DateTime.Now.ToLongTimeString() + "', '";
-            if (RecvData == 1) {
+            if (RecvData == 1 || RecvData == 0x10) {
                 StrSQL += "O" + "', '";
             } else {
                 StrSQL += "X" + "', '";

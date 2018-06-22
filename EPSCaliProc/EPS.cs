@@ -204,7 +204,7 @@ namespace EPSCaliProc {
             iRet = RoutineControl(option, rid, Data, dataLen, ref RecvData, ref RetLen);
 
             int times = 0;
-            while (times < RetrialTimes) {
+            while (times <= RetrialTimes) {
                 // step 6
                 Thread.Sleep(300);
 
@@ -253,12 +253,15 @@ namespace EPSCaliProc {
                         DataBase.WriteResult("EPSCaliProc", StrVIN, RecvData[0], "");
                         if (IsRepeatCali) {
                             // step 20
+                            ++times;
                             Thread.Sleep(2400);
                             continue;
                         }
+                    } else {
+                        // If RecvData[0] > 0x01 and < 0x80
+                        // the ECU is still working on the calibration stage and not finished yet
+                        continue;
                     }
-                    // If RecvData[0] > 0x01 and < 0x80
-                    // the ECU is still working on the calibration stage and not finished yet
                 } else {
                     // an error occurred
                     Log.ShowLog(string.Format("===> {0}", GetErrorMessage(RecvData[0])), LogBox.Level.error);
