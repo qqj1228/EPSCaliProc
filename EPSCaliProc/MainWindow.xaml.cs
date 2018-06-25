@@ -87,6 +87,8 @@ namespace EPSCaliProc {
             EPBCali.StrVIN = this.tbxVIN.Text;
             EPBCali.IsClearCali = (bool)this.ckbxClearCali.IsChecked;
             EPBCali.IsRepeatCali = (bool)this.ckbxRepeatCali.IsChecked;
+            EPBCali.StrSoftwareVer = this.tbxSoftwareVer.Text;
+            EPBCali.StrHardwareVer = this.tbxHardwareVer.Text;
             if (int.TryParse(this.tbxRetrialTimes.Text, out int result)) {
                 EPBCali.RetrialTimes = result;
                 Log.ShowLog("====== EPB标定开始 ======");

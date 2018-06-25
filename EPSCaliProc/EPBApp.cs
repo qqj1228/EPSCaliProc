@@ -119,6 +119,29 @@ namespace EPSCaliProc {
             return iRet;
         }
 
+        public unsafe int ReadAllDTC(ref int NumOfDTC, ref byte[] RecvData, ref int RetLen) {
+            int iRet = 0;
+            RetLen = 0;
+            byte[] RespData = new byte[500];
+            fixed (byte* pResp = RespData) {
+                iRet = base.ReadAllDTC(ref NumOfDTC, pResp, 500, ref RetLen);
+                if (iRet == 0) {
+                    if (RecvData.Length < RetLen) {
+                        iRet = 11013;
+                    } else {
+                        for (int i = 0; i < RetLen; i++) {
+                            RecvData[i] = *(pResp + i);
+                        }
+                    }
+                }
+            }
+            if (vciBase.VciServer.IsTraceOn()) {
+                string info = string.Format("EV6S_EPB_ReadAllDTC(), iRet = {0:d}", iRet);
+                vciBase.VciServer.OutputTrace(1, info);
+                vciBase.VciServer.FlushTrace();
+            }
+            return iRet;
+        }
     }
 
     public class VciEPBApp {
@@ -211,6 +234,17 @@ namespace EPSCaliProc {
                 Log.ShowLog(string.Format("===> EV6S_EPB_ClearDTC() success"));
             } else {
                 Log.ShowLog(string.Format("===> EV6S_EPB_ClearDTC() failed"), LogBox.Level.error);
+            }
+            return iRet;
+        }
+
+        public int ReadAllDTC(ref int NumOfDTC, ref byte[] RecvData, ref int RetLen) {
+            int iRet = app.ReadAllDTC(ref NumOfDTC, ref RecvData, ref RetLen);
+            Log.ShowLog(string.Format("===> EV6S_EPB_ReadAllDTC(), iRet = {0}", iRet));
+            if (iRet == 0) {
+                Log.ShowLog(string.Format("===> EV6S_EPB_ReadAllDTC() success"));
+            } else {
+                Log.ShowLog(string.Format("===> EV6S_EPB_ReadAllDTC() failed"), LogBox.Level.error);
             }
             return iRet;
         }

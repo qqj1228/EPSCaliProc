@@ -13,6 +13,8 @@ namespace EPSCaliProc {
         public bool IsClearCali { get; set; }
         public bool IsRepeatCali { get; set; }
         public Model DataBase { get; set; }
+        public string StrSoftwareVer { get; set; }
+        public string StrHardwareVer { get; set; }
 
         private int retrialTimes;
         public int RetrialTimes {
@@ -105,10 +107,10 @@ namespace EPSCaliProc {
                 iRet = EPBApp.RoutineControl(0x03, rid, Data, iDataLen, ref RecvData, ref RetLen);
 
                 // 判断例程结果
-                if (RetLen == 1) {
+                if (RetLen >= 1) {
                     if (RecvData[0] == 0x10) {
-                        // 例程正确结束, 记录后退出标定
-                        DataBase.WriteResult("EPBCaliProc", StrVIN, RecvData[0], "");
+                        // 例程正确结束, 退出标定
+                        iRet = 0;
                         Log.ShowLog(string.Format("===> Finished Routine:0x{0:X4} with success", rid));
                         break;
                     } else if (RecvData[0] == 0xC0) {
@@ -117,7 +119,7 @@ namespace EPSCaliProc {
                         continue;
                     } else if (RecvData[0] == 0x40) {
                         // 例程错误结束
-                        DataBase.WriteResult("EPBCaliProc", StrVIN, RecvData[0], "");
+                        iRet = -1;
                         Log.ShowLog(string.Format("===> 0x{0:X4}:RoutineFinishedWithFailure", rid), LogBox.Level.error);
                         if (IsRepeatCali) {
                             // 若需要重试的话, 等待三秒后重试
@@ -131,14 +133,14 @@ namespace EPSCaliProc {
                             break;
                         }
                     } else {
-                        // 未知错误, 记录后退出标定
-                        DataBase.WriteResult("EPBCaliProc", StrVIN, RecvData[0], "");
+                        // 未知错误, 退出标定
+                        iRet = -1;
                         Log.ShowLog(string.Format("===> Finished Routine:0x{0:X4} with failure", rid), LogBox.Level.error);
                         break;
                     }
                 } else {
-                    // 例程出错未运行, 记录后退出标定
-                    DataBase.WriteResult("EPBCaliProc", StrVIN, RecvData[0], "");
+                    // 例程出错未运行, 退出标定
+                    iRet = -1;
                     Log.ShowLog(string.Format("===> 0x{0:X4}:RoutineNotRunning", rid), LogBox.Level.error);
                     break;
                 }
@@ -150,6 +152,7 @@ namespace EPSCaliProc {
             int iRet = 0;
             byte[] RecvData = new byte[500];
             int RetLen = 0;
+            string[] strResult = new string[5] { "X", "X", "X", "X", "X" };
 
             iRet = EPBApp.DiagSessionControl(1);
             iRet = EPBApp.TestPresent();
@@ -163,8 +166,16 @@ namespace EPSCaliProc {
                 for (int i = 0; i < RetLen; i++) {
                     SoftwareVer += (char)RecvData[i];
                 }
-                Log.ShowLog(string.Format("===> Software Version: {0}", SoftwareVer));
+                Log.ShowLog(string.Format("===> Software Version(from EPB): {0}", SoftwareVer));
+                if (SoftwareVer == StrSoftwareVer) {
+                    strResult[0] = "O";
+                } else {
+                    Log.ShowLog(string.Format("===> Software Version isn't match", LogBox.Level.error));
+                }
+            } else {
+                Log.ShowLog(string.Format("===> Get Software Version failed", LogBox.Level.error));
             }
+
             // 获取EPB硬件版本号
             did = 0xF192;
             string HardwareVer = "";
@@ -174,6 +185,13 @@ namespace EPSCaliProc {
                     HardwareVer += (char)RecvData[i];
                 }
                 Log.ShowLog(string.Format("===> Hardware Version: {0}", HardwareVer));
+                if (HardwareVer == StrHardwareVer) {
+                    strResult[1] = "O";
+                } else {
+                    Log.ShowLog(string.Format("===> Hardware Version isn't match", LogBox.Level.error));
+                }
+            } else {
+                Log.ShowLog(string.Format("===> Get Hardware Version failed", LogBox.Level.error));
             }
 
             // 设置EPB系统安全访问模式
@@ -189,32 +207,60 @@ namespace EPSCaliProc {
             Data[0] = 1;
             iDataLen = 1;
             iRet = DoCail(rid, Data, iDataLen, ref RecvData, ref RetLen);
+            if (0 == iRet) {
+                strResult[2] = "O";
+            }
 
             // Assembly check 测试
             rid = 0x200A;
             Data[0] = 0;
             iDataLen = 0;
             iRet = DoCail(rid, Data, iDataLen, ref RecvData, ref RetLen);
+            if (0 == iRet) {
+                strResult[3] = "O";
+            }
 
             // 清除系统故障
             iRet = EPBApp.ClearDTC();
 
+            // 读取DTC故障码
+            int NumOfDTC = 0;
+            int DTC = 0;
+            byte Status = 0;
+            int j = 0;
+            iRet = EPBApp.ReadAllDTC(ref NumOfDTC, ref RecvData, ref RetLen);
+
+            if (NumOfDTC > 0) {
+                string strData = "===> Number of DTC: {0}" + NumOfDTC.ToString();
+                for (int i = 0; i < NumOfDTC; i++) {
+                    DTC = ((RecvData[i * 4] << 16) + (RecvData[(i * 4) + 1] << 8) + RecvData[(i * 4) + 2]);
+                    Status = RecvData[(i * 4) + 3];
+                    j = i + 1;
+                    strData += ", DTC[" + j.ToString() + "]: 0x" + DTC.ToString("X6") + " - 0x" + Status.ToString("X2");
+                }
+                Log.ShowLog(strData);
+            }
+
             // 设置出厂模式
             iRet = EPBApp.UnlockECU();
             did = 0x0110;
-            Data[0] = 0xFF;
+            Data[0] = 0x00;
             iDataLen = 1;
             iRet = EPBApp.WriteDataByID(did, Data, iDataLen);
             if (iRet == 0) {
                 iRet = EPBApp.ReadDataByID(did, ref RecvData, ref RetLen);
-                if (iRet == 0 && RetLen == 1 && RecvData[0] == 0xFF) {
+                if (iRet == 0 && RetLen == 1 && RecvData[0] == 0x00) {
                     Log.ShowLog("===> 设置出厂模式成功");
+                    strResult[4] = "O";
                 } else {
                     Log.ShowLog("===> 读取出厂模式失败", LogBox.Level.error);
                 }
             } else {
                 Log.ShowLog("===> 设置出厂模式失败", LogBox.Level.error);
             }
+
+            // 写结果到数据库里
+            DataBase.WriteEPBResult("EPBCaliProc", StrVIN, strResult, Vci.DTCToString(NumOfDTC, RecvData));
         }
 
     }

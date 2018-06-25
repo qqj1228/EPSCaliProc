@@ -75,7 +75,7 @@ namespace EPSCaliProc {
             StrSQL += StrVIN + "', '";
             StrSQL += DateTime.Now.ToString("yyyy-MM-dd") + "', '";
             StrSQL += DateTime.Now.ToLongTimeString() + "', '";
-            if (RecvData == 1 || RecvData == 0x10) {
+            if (RecvData == 1) {
                 StrSQL += "O" + "', '";
             } else {
                 StrSQL += "X" + "', '";
@@ -89,6 +89,36 @@ namespace EPSCaliProc {
                     sqlConn.Open();
                     Log.ShowLog(string.Format("===> T-SQL: {0}", StrSQL));
                     Log.ShowLog(string.Format("===> EPSCaliProc Done. Insert {0} record(s)", sqlCmd.ExecuteNonQuery()));
+                } catch (Exception e) {
+                    Log.ShowLog("===> ERROR: " + e.Message, LogBox.Level.error);
+                }
+            }
+        }
+
+        public void WriteEPBResult(string StrTable, string StrVIN, string[] strResult, string strDTC) {
+            string strAllResult = "O";
+            string StrSQL = "insert " + StrTable + " values ('";
+            StrSQL += StrVIN + "', '";
+            StrSQL += DateTime.Now.ToString("yyyy-MM-dd") + "', '";
+            StrSQL += DateTime.Now.ToLongTimeString() + "', '";
+            for (int i = 0; i < 5; i++) {
+                if (strResult[i] != "O") {
+                    strAllResult = "X";
+                    break;
+                }
+            }
+            StrSQL += strAllResult + "', '";
+            for (int i = 0; i < 5; i++) {
+                StrSQL += strResult[i] + "', '";
+            }
+            StrSQL += strDTC + "')";
+
+            using (SqlConnection sqlConn = new SqlConnection(StrConn)) {
+                SqlCommand sqlCmd = new SqlCommand(StrSQL, sqlConn);
+                try {
+                    sqlConn.Open();
+                    Log.ShowLog(string.Format("===> T-SQL: {0}", StrSQL));
+                    Log.ShowLog(string.Format("===> EPBCaliProc Done. Insert {0} record(s)", sqlCmd.ExecuteNonQuery()));
                 } catch (Exception e) {
                     Log.ShowLog("===> ERROR: " + e.Message, LogBox.Level.error);
                 }

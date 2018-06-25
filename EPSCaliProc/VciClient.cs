@@ -103,7 +103,9 @@ namespace EPSCaliProc {
             string strResult = "";
             int DTC = 0;
             byte Status = 0;
-
+            if (NumOfDTC <= 0 || RecvData.Length == 0) {
+                return "";
+            }
             for (int i = 0; i < NumOfDTC; i++) {
                 DTC = ((RecvData[i * 4] << 16) + (RecvData[(i * 4) + 1] << 8) + RecvData[(i * 4) + 2]);
                 Status = RecvData[(i * 4) + 3];

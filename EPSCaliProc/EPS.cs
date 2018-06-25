@@ -214,7 +214,7 @@ namespace EPSCaliProc {
                 iRet = RoutineControl(option, rid, Data, dataLen, ref RecvData, ref RetLen);
 
                 // step 8
-                if (RetLen == 1) {
+                if (RetLen >= 1) {
                     if (RecvData[0] == 0x01) {
                         // the calibration is done
                         // step 9
@@ -234,12 +234,12 @@ namespace EPSCaliProc {
 
                         // step 13
                         if (NumOfDTC > 0) {
-                            string strData = "===> Number of DTC = {0}" + NumOfDTC.ToString();
+                            string strData = "===> Number of DTC: {0}" + NumOfDTC.ToString();
                             for (int i = 0; i < NumOfDTC; i++) {
                                 DTC = ((RecvData[i * 4] << 16) + (RecvData[(i * 4) + 1] << 8) + RecvData[(i * 4) + 2]);
                                 Status = RecvData[(i * 4) + 3];
                                 j = i + 1;
-                                strData += ", DTC[" + j.ToString() + "] = 0x" + DTC.ToString("X6") + " - 0x" + Status.ToString("X2");
+                                strData += ", DTC[" + j.ToString() + "]: 0x" + DTC.ToString("X6") + " - 0x" + Status.ToString("X2");
                             }
                             Log.ShowLog(strData);
                             DataBase.WriteResult("EPSCaliProc", StrVIN, 1, Vci.DTCToString(NumOfDTC, RecvData));
