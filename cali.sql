@@ -7,7 +7,7 @@ GO
 CREATE TABLE JAC.dbo.EPSCaliProc
 (
 	ID int IDENTITY PRIMARY KEY NOT NULL, -- ID, 自增, 主键
-    VIN varchar(17) NOT NULL UNIQUE, -- VIN码
+    VIN varchar(17) NOT NULL, -- VIN码
     CaliDate DATE NULL, -- 标定日期
 	CaliTime TIME NULL, -- 标定时间
     Result VARCHAR(1) NULL, -- 标定结果
@@ -47,7 +47,7 @@ GO
 CREATE TABLE JAC.dbo.EPBCaliProc
 (
 	ID int IDENTITY PRIMARY KEY NOT NULL, -- ID, 自增, 主键
-    VIN varchar(17) NOT NULL UNIQUE, -- VIN码
+    VIN varchar(17) NOT NULL, -- VIN码
     CaliDate DATE NULL, -- 标定日期
 	CaliTime TIME NULL, -- 标定时间
     Result VARCHAR(1) NULL, -- 标定总结果

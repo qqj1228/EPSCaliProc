@@ -145,14 +145,12 @@ namespace EPSCaliProc {
     }
 
     public class VciEPBApp {
-        readonly vciApp.App_Interface _Interface;
         readonly vciApp.MessagePipe _Pipe;
         readonly vciApp.VCI_Channel _Channel;
         readonly EPBApp app;
         readonly LogBox Log;
 
         public VciEPBApp(LogBox Log) {
-            _Interface = vciApp.App_Interface.GetApp();
             _Pipe = vciApp.MessagePipe.GetMessagePipe();
             _Channel = new vciApp.VCI_Channel(1, 0);
             app = new EPBApp(1, 0, _Channel, _Pipe);

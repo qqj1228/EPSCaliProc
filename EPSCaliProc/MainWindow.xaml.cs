@@ -1,4 +1,6 @@
-﻿using System;
+﻿using MahApps.Metro;
+using MahApps.Metro.Controls;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -24,7 +26,7 @@ namespace EPSCaliProc {
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
     /// </summary>
-    public partial class MainWindow : Window {
+    public partial class MainWindow : MetroWindow {
         LogBox Log { get; set; }
         public EPS EPSCali { get; set; }
         public EPB EPBCali { get; set; }
@@ -98,6 +100,38 @@ namespace EPSCaliProc {
         } else {
                 string str = this.tbxRetrialTimes.Text + " 无法正确转换成整数，请重试\n";
                 MessageBox.Show(str, "RetialTimes转换出错");
+            }
+        }
+
+        private void BtnMenu_Click(object sender, RoutedEventArgs e) {
+            // 默认contextmenu只能右键弹出，加入以下代码使之按下左键也能弹出
+            this.menu.PlacementTarget = this.btnMenu;
+            this.menu.IsOpen = true;
+        }
+
+        private void MenuLight_Checked(object sender, RoutedEventArgs e) {
+            if (this.menuDark != null) {
+                this.menuDark.IsChecked = false;
+                ThemeManager.ChangeAppTheme(Application.Current, "BaseLight");
+            }
+        }
+
+        private void MenuDark_Checked(object sender, RoutedEventArgs e) {
+            if (this.menuLight != null) {
+                this.menuLight.IsChecked = false;
+                ThemeManager.ChangeAppTheme(Application.Current, "BaseDark");
+            }
+        }
+
+        private void MenuLight_Unchecked(object sender, RoutedEventArgs e) {
+            if (this.menuDark != null) {
+                this.menuDark.IsChecked = true;
+            }
+        }
+
+        private void MenuDark_Unchecked(object sender, RoutedEventArgs e) {
+            if (this.menuLight != null) {
+                this.menuLight.IsChecked = true;
             }
         }
     }
