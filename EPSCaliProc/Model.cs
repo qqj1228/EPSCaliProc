@@ -70,17 +70,14 @@ namespace EPSCaliProc {
             }
         }
 
-        public void WriteResult(string StrTable, string StrVIN, int RecvData, string StrDTC) {
+        public void WriteResult(string StrTable, string StrVIN, string StrResult, int RoutineStatus, int RoutineResult, string StrDTC) {
             string StrSQL = "insert " + StrTable + " values ('";
             StrSQL += StrVIN + "', '";
             StrSQL += DateTime.Now.ToString("yyyy-MM-dd") + "', '";
             StrSQL += DateTime.Now.ToLongTimeString() + "', '";
-            if (RecvData == 1) {
-                StrSQL += "O" + "', '";
-            } else {
-                StrSQL += "X" + "', '";
-            }
-            StrSQL += RecvData.ToString("X2") + "', '";
+            StrSQL += StrResult + "', '";
+            StrSQL += RoutineStatus.ToString("X2") + "', '";
+            StrSQL += RoutineResult.ToString("X2") + "', '";
             StrSQL += StrDTC + "')";
 
             using (SqlConnection sqlConn = new SqlConnection(StrConn)) {

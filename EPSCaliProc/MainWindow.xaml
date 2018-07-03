@@ -64,23 +64,23 @@
             </Grid.RowDefinitions>
             <StackPanel Grid.Row="0">
                 <Label Content="VIN 码："/>
-                <TextBox x:Name="tbxVIN" Text="VIN Code" TextWrapping="Wrap" BorderBrush="Black" VerticalAlignment="Center"/>
+                <TextBox x:Name="tbxVIN" Text="VIN Code" TextWrapping="Wrap" VerticalAlignment="Center"/>
             </StackPanel>
             <CheckBox Grid.Row="2" x:Name="ckbxClearCali" Content="清除上次EPS标定结果" VerticalAlignment="Center"/>
             <CheckBox Grid.Row="4" x:Name="ckbxRepeatCali" Content="EPS/EPB标定出错后重试" VerticalAlignment="Center"/>
             <StackPanel Grid.Row="6">
                 <Label Content="重试次数：" IsEnabled="{Binding ElementName=ckbxRepeatCali, Path=IsChecked}"/>
-                <TextBox x:Name="tbxRetrialTimes" Text="Times" TextWrapping="Wrap" BorderBrush="Black" VerticalAlignment="Center"
+                <TextBox x:Name="tbxRetrialTimes" Text="Times" TextWrapping="Wrap" VerticalAlignment="Center"
                          IsEnabled="{Binding ElementName=ckbxRepeatCali, Path=IsChecked}"/>
             </StackPanel>
             <Button Grid.Row="8" x:Name="btnEPSStart" Content="开始EPS标定" Click="BtnEPSStart_Click" FontSize="12"/>
             <StackPanel Grid.Row="10">
                 <Label Content="EPB软件版本号："/>
-                <TextBox x:Name="tbxSoftwareVer" TextWrapping="Wrap" BorderBrush="Black" VerticalAlignment="Center"/>
+                <TextBox x:Name="tbxSoftwareVer" TextWrapping="Wrap" VerticalAlignment="Center"/>
             </StackPanel>
             <StackPanel Grid.Row="12">
                 <Label Content="EPB硬件版本号："/>
-                <TextBox x:Name="tbxHardwareVer" TextWrapping="Wrap" BorderBrush="Black" VerticalAlignment="Center"/>
+                <TextBox x:Name="tbxHardwareVer" TextWrapping="Wrap" VerticalAlignment="Center"/>
             </StackPanel>
             <Button Grid.Row="14" x:Name="btnEPBStart" Content="开始EPB标定" Click="BtnEPBStart_Click" FontSize="12"/>
             <Button Grid.Row="16" x:Name="btnClear" Content="清除记录" Click="BtnClear_Click" FontSize="12"/>

@@ -217,40 +217,69 @@ namespace EPSCaliProc {
                 if (RetLen >= 1) {
                     if (RecvData[0] == 0x01) {
                         // the calibration is done
+                        Log.ShowLog("===> RoutineStatus: Function active");
+                        Log.ShowLog(string.Format("===> RoutineResult: {0}", GetErrorMessage(RecvData[1])));
+                        if (RecvData[1] == 0x81) {
+                            Log.ShowLog("===> RoutineControl() Success");
+                            //DataBase.WriteResult("EPSCaliProc", StrVIN, "", RecvData[0], RecvData[1], "");
+                        }
+
                         // step 9
                         option = 0x02;
                         rid = 0x0100;
                         iRet = RoutineControl(option, rid, Data, dataLen, ref RecvData, ref RetLen);
 
-                        // step 11
-                        iRet = ClearDTC();
+                        int times1 = 0;
+                        while (iRet != 0 || times1 <= RetrialTimes) {
+                            // step 11
+                            iRet = ClearDTC();
 
-                        // step 12
-                        int NumOfDTC = 0;
-                        int DTC = 0;
-                        byte Status = 0;
-                        int j = 0;
-                        iRet = ReadAllDTC(ref NumOfDTC, ref RecvData, ref RetLen);
+                            // step 12
+                            int NumOfDTC = 0;
+                            int DTC = 0;
+                            byte Status = 0;
+                            int j = 0;
+                            iRet = ReadAllDTC(ref NumOfDTC, ref RecvData, ref RetLen);
 
-                        // step 13
-                        if (NumOfDTC > 0) {
-                            string strData = "===> Number of DTC: {0}" + NumOfDTC.ToString();
-                            for (int i = 0; i < NumOfDTC; i++) {
-                                DTC = ((RecvData[i * 4] << 16) + (RecvData[(i * 4) + 1] << 8) + RecvData[(i * 4) + 2]);
-                                Status = RecvData[(i * 4) + 3];
-                                j = i + 1;
-                                strData += ", DTC[" + j.ToString() + "]: 0x" + DTC.ToString("X6") + " - 0x" + Status.ToString("X2");
+                            // step 13
+                            if (NumOfDTC > 0) {
+                                string strData = "===> Number of DTC: {0}" + NumOfDTC.ToString();
+                                for (int i = 0; i < NumOfDTC; i++) {
+                                    DTC = ((RecvData[i * 4] << 16) + (RecvData[(i * 4) + 1] << 8) + RecvData[(i * 4) + 2]);
+                                    Status = RecvData[(i * 4) + 3];
+                                    j = i + 1;
+                                    strData += ", DTC[" + j.ToString() + "]: 0x" + DTC.ToString("X6") + " - 0x" + Status.ToString("X2");
+                                }
+                                Log.ShowLog(strData, LogBox.Level.error);
+                                DataBase.WriteResult("EPSCaliProc", StrVIN, "X", 0, 0, Vci.DTCToString(NumOfDTC, RecvData));
+                                continue;
                             }
-                            Log.ShowLog(strData);
-                            DataBase.WriteResult("EPSCaliProc", StrVIN, 1, Vci.DTCToString(NumOfDTC, RecvData));
-                        } else {
-                            DataBase.WriteResult("EPSCaliProc", StrVIN, 1, "");
+                            if (IsRepeatCali) {
+                                ++times1;
+                            }
                         }
+                        Log.ShowLog("===> Calibration Procedure Success");
+                        DataBase.WriteResult("EPSCaliProc", StrVIN, "O", 0, 0, "");
                         break;
+                    } else if (RecvData[0] == 0x02) {
+                        // 朱工提供的标定流程说明存疑
+                        // 按照JAC提供的EPS资料所述，例程状态返回值有2个字节，#1字节表示例程状态，#2字节表示例程执行结果
+                        Log.ShowLog("===> RoutineStatus: Function not active", LogBox.Level.error);
+                        Log.ShowLog(string.Format("===> RoutineResult: {0}", GetErrorMessage(RecvData[1])), LogBox.Level.error);
+                        DataBase.WriteResult("EPSCaliProc", StrVIN, "X", RecvData[0], RecvData[1], "");
+                        if (IsRepeatCali) {
+                            // step 20
+                            ++times;
+                            Thread.Sleep(2400);
+                            continue;
+                        } else {
+                            Log.ShowLog("===> Exit Calibration Procedure.", LogBox.Level.error);
+                            break;
+                        }
                     } else if (RecvData[0] > 0x80) {
                         // an error occurred
-                        Log.ShowLog(string.Format("===> {0}", GetErrorMessage(RecvData[0])), LogBox.Level.error);
-                        DataBase.WriteResult("EPSCaliProc", StrVIN, RecvData[0], "");
+                        Log.ShowLog(string.Format("===> Result: {0}", GetErrorMessage(RecvData[0])), LogBox.Level.error);
+                        DataBase.WriteResult("EPSCaliProc", StrVIN, "X", RecvData[0], RecvData[1], "");
                         if (IsRepeatCali) {
                             // step 20
                             ++times;
@@ -258,14 +287,19 @@ namespace EPSCaliProc {
                             continue;
                         }
                     } else {
-                        // If RecvData[0] > 0x01 and < 0x80
+                        // If RecvData[0] != 0x01 and != 0x02 and < 0x80
                         // the ECU is still working on the calibration stage and not finished yet
+                        if (IsRepeatCali) {
+                            // step 20
+                            ++times;
+                            Thread.Sleep(2400);
+                        }
                         continue;
                     }
                 } else {
                     // an error occurred
-                    Log.ShowLog(string.Format("===> {0}", GetErrorMessage(RecvData[0])), LogBox.Level.error);
-                    DataBase.WriteResult("EPSCaliProc", StrVIN, RecvData[0], "");
+                    Log.ShowLog("===> RoutineControl() failed, Exit Calibration Procedure.", LogBox.Level.error);
+                    DataBase.WriteResult("EPSCaliProc", StrVIN, "X", 0, 0, "");
                     break;
                 }
             }
