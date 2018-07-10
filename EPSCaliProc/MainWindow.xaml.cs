@@ -109,30 +109,12 @@ namespace EPSCaliProc {
             this.menu.IsOpen = true;
         }
 
-        private void MenuLight_Checked(object sender, RoutedEventArgs e) {
-            if (this.menuDark != null) {
-                this.menuDark.IsChecked = false;
-                ThemeManager.ChangeAppTheme(Application.Current, "BaseLight");
-            }
-        }
-
         private void MenuDark_Checked(object sender, RoutedEventArgs e) {
-            if (this.menuLight != null) {
-                this.menuLight.IsChecked = false;
-                ThemeManager.ChangeAppTheme(Application.Current, "BaseDark");
-            }
-        }
-
-        private void MenuLight_Unchecked(object sender, RoutedEventArgs e) {
-            if (this.menuDark != null) {
-                this.menuDark.IsChecked = true;
-            }
+            ThemeManager.ChangeAppTheme(Application.Current, "BaseDark");
         }
 
         private void MenuDark_Unchecked(object sender, RoutedEventArgs e) {
-            if (this.menuLight != null) {
-                this.menuLight.IsChecked = true;
-            }
+            ThemeManager.ChangeAppTheme(Application.Current, "BaseLight");
         }
     }
 

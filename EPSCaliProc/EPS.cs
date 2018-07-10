@@ -69,7 +69,7 @@ namespace EPSCaliProc {
                         Log.ShowLog("==> StartDevice failed", LogBox.Level.error);
 #if !DEBUG
                         Close();
-                        return iRet;
+                        return;
 #endif
                     }
                 }

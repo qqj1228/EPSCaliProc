@@ -19,7 +19,6 @@
                 </StackPanel>
                 <Button.ContextMenu>
                     <ContextMenu x:Name="menu">
-                        <MenuItem x:Name="menuLight" FontSize="12" Header="亮色主题" IsCheckable="True" IsChecked="True" Checked="MenuLight_Checked" Unchecked="MenuLight_Unchecked"/>
                         <MenuItem x:Name="menuDark" FontSize="12" Header="暗色主题" IsCheckable="True" Checked="MenuDark_Checked" Unchecked="MenuDark_Unchecked"/>
                     </ContextMenu>
                 </Button.ContextMenu>
