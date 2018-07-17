@@ -15,9 +15,9 @@
 
 5. 使用方法为在命令行中调用主程序：主程序名后跟VIN码，通过命令行参数将VIN码传递给主程序。例如：
 
-```dos
-EPSCaliProc.exe VINTESTCODE012345
-```
+	```dos
+	EPSCaliProc.exe VINTESTCODE012345
+	```
 
 	- 其中“VINTESTCODE012345”为VIN码, 也可以不加VIN码参数直接启动主程序后，在左侧输入控件内输入VIN码。
 
