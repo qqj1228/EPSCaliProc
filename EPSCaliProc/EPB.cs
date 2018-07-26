@@ -30,18 +30,20 @@ namespace EPSCaliProc {
         VciClient Vci;
         protected VciEPBApp EPBApp;
         readonly LogBox Log;
+        readonly Config Cfg;
 
-        public EPB(string StrDirTrace, string StrDirXML, string StrVIN, bool IsClearCali, bool IsRepeatCali, int RetrialTimes, LogBox Log) {
+        public EPB(string StrDirTrace, string StrDirXML, string StrVIN, Config Cfg, LogBox Log) {
             Vci = new VciClient(StrDirTrace, StrDirXML, Log);
             EPBApp = new VciEPBApp(Log);
 
             IsClientRun = false;
             this.StrVIN = StrVIN;
-            this.IsClearCali = IsClearCali;
-            this.IsRepeatCali = IsRepeatCali;
-            this.RetrialTimes = RetrialTimes;
             this.Log = Log;
-            DataBase = new Model(Log);
+            this.Cfg = Cfg;
+            DataBase = new Model(Cfg, Log);
+            this.IsClearCali = Cfg.Main.ClearEPS;
+            this.IsRepeatCali = Cfg.Main.Retry;
+            this.RetrialTimes = Cfg.Main.RetryTimes;
             //DataBase.ShowDB("EPSCaliProc");
             //byte[] temp = new byte[] { 0x11, 0x22, 0x33, 0xAA, 0x44, 0x55, 0x66, 0xBB, 0x77, 0x88, 0x99, 0xCC };
             //DataBase.WriteResult("EPSCaliProc", "testvincode999345", 1, Vci.DTCToString(3, temp));
@@ -60,6 +62,10 @@ namespace EPSCaliProc {
         }
 
         public void Run() {
+            this.IsClearCali = Cfg.Main.ClearEPS;
+            this.IsRepeatCali = Cfg.Main.Retry;
+            this.RetrialTimes = Cfg.Main.RetryTimes;
+
             int iRet = 0;
             iRet = Vci.StartService();
             if (iRet == 0) {

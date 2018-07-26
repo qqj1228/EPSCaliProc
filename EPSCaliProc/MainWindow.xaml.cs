@@ -28,9 +28,9 @@ namespace EPSCaliProc {
     /// </summary>
     public partial class MainWindow : MetroWindow {
         LogBox Log { get; set; }
+        public Config Cfg { get; set; }
         public EPS EPSCali { get; set; }
         public EPB EPBCali { get; set; }
-        const int RetrialTimes = 3;
 
         private string strVIN;
         public string StrVIN {
@@ -51,25 +51,25 @@ namespace EPSCaliProc {
             InitializeComponent();
 
             Log = new LogBox(this.rbxLog, this.rbxDoc);
+            Cfg = new Config(Log);
+            InitUI();
 
-            EPSCali = new EPS("vci_trace", "vci_config", StrVIN, (bool)this.ckbxClearCali.IsChecked, (bool)this.ckbxRepeatCali.IsChecked, RetrialTimes, Log);
-            EPBCali = new EPB("vci_trace", "vci_config", StrVIN, (bool)this.ckbxClearCali.IsChecked, (bool)this.ckbxRepeatCali.IsChecked, RetrialTimes, Log);
+            EPSCali = new EPS("vci_trace", "vci_config", StrVIN, Cfg, Log);
+            EPBCali = new EPB("vci_trace", "vci_config", StrVIN, Cfg, Log);
+        }
+
+        private void InitUI() {
+            this.ckbxClearCali.IsChecked = Cfg.Main.ClearEPS;
+            this.ckbxRepeatCali.IsChecked = Cfg.Main.Retry;
+            this.tbxRetrialTimes.Text = Cfg.Main.RetryTimes.ToString();
         }
 
         private void BtnEPSStart_Click(object sender, RoutedEventArgs e) {
             EPSCali.StrVIN = this.tbxVIN.Text;
-            EPSCali.IsClearCali = (bool)this.ckbxClearCali.IsChecked;
-            EPSCali.IsRepeatCali = (bool)this.ckbxRepeatCali.IsChecked;
-            if (int.TryParse(this.tbxRetrialTimes.Text, out int result)) {
-                EPSCali.RetrialTimes = result;
-                Log.ShowLog("====== EPS标定开始 ======");
-                Task.Factory.StartNew(() => {
-                    EPSCali.Run();
-                });
-            } else {
-                string str = this.tbxRetrialTimes.Text + " 无法正确转换成整数，请重试\n";
-                MessageBox.Show(str, "RetialTimes转换出错");
-            }
+            Log.ShowLog("====== EPS标定开始 ======");
+            Task.Factory.StartNew(() => {
+                EPSCali.Run();
+            });
         }
 
         private void BtnClear_Click(object sender, RoutedEventArgs e) {
@@ -82,25 +82,16 @@ namespace EPSCaliProc {
                 StrVIN = Application.Current.Properties["VIN"].ToString();
             }
             this.tbxVIN.Text = StrVIN;
-            this.tbxRetrialTimes.Text = RetrialTimes.ToString();
         }
 
         private void BtnEPBStart_Click(object sender, RoutedEventArgs e) {
             EPBCali.StrVIN = this.tbxVIN.Text;
-            EPBCali.IsClearCali = (bool)this.ckbxClearCali.IsChecked;
-            EPBCali.IsRepeatCali = (bool)this.ckbxRepeatCali.IsChecked;
             EPBCali.StrSoftwareVer = this.tbxSoftwareVer.Text;
             EPBCali.StrHardwareVer = this.tbxHardwareVer.Text;
-            if (int.TryParse(this.tbxRetrialTimes.Text, out int result)) {
-                EPBCali.RetrialTimes = result;
-                Log.ShowLog("====== EPB标定开始 ======");
-                Task.Factory.StartNew(() => {
-                    EPBCali.Run();
-                });
-        } else {
-                string str = this.tbxRetrialTimes.Text + " 无法正确转换成整数，请重试\n";
-                MessageBox.Show(str, "RetialTimes转换出错");
-            }
+            Log.ShowLog("====== EPB标定开始 ======");
+            Task.Factory.StartNew(() => {
+                EPBCali.Run();
+            });
         }
 
         private void BtnMenu_Click(object sender, RoutedEventArgs e) {
@@ -115,6 +106,27 @@ namespace EPSCaliProc {
 
         private void MenuDark_Unchecked(object sender, RoutedEventArgs e) {
             ThemeManager.ChangeAppTheme(Application.Current, "BaseLight");
+        }
+
+        private void CkbxClearCali_Click(object sender, RoutedEventArgs e) {
+            Cfg.Main.ClearEPS = (bool)this.ckbxClearCali.IsChecked;
+        }
+
+        private void CkbxRepeatCali_Click(object sender, RoutedEventArgs e) {
+            Cfg.Main.Retry = (bool)this.ckbxRepeatCali.IsChecked;
+        }
+
+        private void TbxRetrialTimes_LostFocus(object sender, RoutedEventArgs e) {
+            int times = Cfg.Main.RetryTimes;
+            try {
+                times = Convert.ToInt32(this.tbxRetrialTimes.Text);
+            } catch (Exception ex) {
+                string str = "ERROR: \"" + this.tbxRetrialTimes.Text + "\" 输入错误, " + ex.Message + "\n忽略输入值，请重新输入";
+                Log.ShowLog(str, LogBox.Level.error);
+                MessageBox.Show(str, "RetialTimes输入错误");
+                this.tbxRetrialTimes.Text = times.ToString();
+            }
+            Cfg.Main.RetryTimes = times;
         }
     }
 

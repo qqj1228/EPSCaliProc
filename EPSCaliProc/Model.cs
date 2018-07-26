@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -12,38 +11,21 @@ namespace EPSCaliProc {
     public class Model {
         public string StrConn { get; set; }
         public string StrConfigFile { get; set; }
-        public DBConfig DBCfg;
         readonly LogBox Log;
+        readonly Config Cfg;
 
-        public Model(LogBox Log) {
+        public Model(Config Cfg, LogBox Log) {
+            this.Cfg = Cfg;
             this.Log = Log;
             this.StrConn = "";
-            this.StrConfigFile = "./DB_config.json";
-            DBCfg = new DBConfig();
-            ReadConfig();
-        }
-
-        public Model(string StrConfig, LogBox Log) {
-            this.Log = Log;
-            this.StrConn = "";
-            this.StrConfigFile = StrConfig;
-            DBCfg = new DBConfig();
             ReadConfig();
         }
 
         void ReadConfig() {
-            try {
-                using (StreamReader file = File.OpenText(StrConfigFile)) {
-                    JsonSerializer serializer = new JsonSerializer();
-                    DBCfg = serializer.Deserialize(file, typeof(DBConfig)) as DBConfig;
-                }
-            } catch (Exception e) {
-                Log.ShowLog("===> ERROR: " + e.Message, LogBox.Level.error);
-            }
-            StrConn = "user id=" + DBCfg.DB_UserID + ";";
-            StrConn += "password=" + DBCfg.DB_Pwd + ";";
-            StrConn += "database=" + DBCfg.DB_Name + ";";
-            StrConn += "data source=" + DBCfg.DB_IP + "," + DBCfg.DB_Port;
+            StrConn = "user id=" + Cfg.DB.UserID + ";";
+            StrConn += "password=" + Cfg.DB.Pwd + ";";
+            StrConn += "database=" + Cfg.DB.Name + ";";
+            StrConn += "data source=" + Cfg.DB.IP + "," + Cfg.DB.Port;
         }
 
         public void ShowDB(string StrTable) {
@@ -122,13 +104,4 @@ namespace EPSCaliProc {
             }
         }
     }
-
-    public class DBConfig {
-        public string DB_IP { get; set; }
-        public string DB_Port { get; set; }
-        public string DB_Name { get; set; }
-        public string DB_UserID { get; set; }
-        public string DB_Pwd { get; set; }
-    }
-
 }

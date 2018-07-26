@@ -65,12 +65,12 @@
                 <Label Content="VIN 码："/>
                 <TextBox x:Name="tbxVIN" Text="VIN Code" TextWrapping="Wrap" VerticalAlignment="Center"/>
             </StackPanel>
-            <CheckBox Grid.Row="2" x:Name="ckbxClearCali" Content="清除上次EPS标定结果" VerticalAlignment="Center"/>
-            <CheckBox Grid.Row="4" x:Name="ckbxRepeatCali" Content="EPS/EPB标定出错后重试" VerticalAlignment="Center"/>
+            <CheckBox Grid.Row="2" x:Name="ckbxClearCali" Content="清除上次EPS标定结果" VerticalAlignment="Center" Click="CkbxClearCali_Click"/>
+            <CheckBox Grid.Row="4" x:Name="ckbxRepeatCali" Content="EPS/EPB标定出错后重试" VerticalAlignment="Center" Click="CkbxRepeatCali_Click"/>
             <StackPanel Grid.Row="6">
                 <Label Content="重试次数：" IsEnabled="{Binding ElementName=ckbxRepeatCali, Path=IsChecked}"/>
                 <TextBox x:Name="tbxRetrialTimes" Text="Times" TextWrapping="Wrap" VerticalAlignment="Center"
-                         IsEnabled="{Binding ElementName=ckbxRepeatCali, Path=IsChecked}"/>
+                         IsEnabled="{Binding ElementName=ckbxRepeatCali, Path=IsChecked}" LostFocus="TbxRetrialTimes_LostFocus"/>
             </StackPanel>
             <Button Grid.Row="8" x:Name="btnEPSStart" Content="开始EPS标定" Click="BtnEPSStart_Click" FontSize="12"/>
             <StackPanel Grid.Row="10">

@@ -27,16 +27,18 @@ namespace EPSCaliProc {
 
         VciClient Vci;
         readonly LogBox Log;
+        readonly Config Cfg;
 
-        public EPS(string StrDirTrace, string StrDirXML, string StrVIN, bool IsClearCali, bool IsRepeatCali, int RetrialTimes, LogBox Log) {
+        public EPS(string StrDirTrace, string StrDirXML, string StrVIN, Config Cfg, LogBox Log) {
             Vci = new VciClient(StrDirTrace, StrDirXML, Log);
             IsClientRun = false;
             this.StrVIN = StrVIN;
-            this.IsClearCali = IsClearCali;
-            this.IsRepeatCali = IsRepeatCali;
-            this.RetrialTimes = RetrialTimes;
             this.Log = Log;
-            DataBase = new Model(Log);
+            this.Cfg = Cfg;
+            DataBase = new Model(Cfg, Log);
+            this.IsClearCali = Cfg.Main.ClearEPS;
+            this.IsRepeatCali = Cfg.Main.Retry;
+            this.RetrialTimes = Cfg.Main.RetryTimes;
         }
 
         ~EPS() {
@@ -52,6 +54,10 @@ namespace EPSCaliProc {
         }
 
         public void Run() {
+            this.IsClearCali = Cfg.Main.ClearEPS;
+            this.IsRepeatCali = Cfg.Main.Retry;
+            this.RetrialTimes = Cfg.Main.RetryTimes;
+
             int iRet = 0;
             iRet = Vci.StartService();
             if (iRet == 0) {
