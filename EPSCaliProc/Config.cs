@@ -25,7 +25,7 @@ namespace EPSCaliProc {
         readonly LogBox Log;
         string ConfigFile { get; set; }
 
-        public Config(LogBox Log, string strConfigFile = "./config.xml") {
+        public Config(LogBox Log, string strConfigFile = "config.xml") {
             this.Log = Log;
             this.ConfigFile = strConfigFile;
             LoadConfig();

@@ -7,6 +7,17 @@
         xmlns:ctrls="http://metro.mahapps.com/winfx/xaml/controls"
         mc:Ignorable="d"
         Title="EPS_EPB下线标定" Height="600" Width="800">
+    <ctrls:MetroWindow.IconTemplate>
+        <DataTemplate>
+            <Grid>
+                <Rectangle Width="16" Height="16" Fill="WhiteSmoke">
+                    <Rectangle.OpacityMask>
+                        <VisualBrush Stretch="Fill" Visual="{StaticResource appbar_tools}" />
+                    </Rectangle.OpacityMask>
+                </Rectangle>
+            </Grid>
+        </DataTemplate>
+    </ctrls:MetroWindow.IconTemplate>
     <ctrls:MetroWindow.RightWindowCommands>
         <ctrls:WindowCommands>
             <Button x:Name="btnMenu" Click="BtnMenu_Click">
