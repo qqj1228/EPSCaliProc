@@ -18,6 +18,7 @@ namespace EPSCaliProc {
             public bool ClearEPS { get; set; }
             public bool Retry { get; set; }
             public int RetryTimes { get; set; }
+            public bool AutoRun { get; set; }
         }
 
         public DBConfig DB;
@@ -47,11 +48,17 @@ namespace EPSCaliProc {
                     if (node.Name == "Main") {
                         foreach (XmlNode item in xnlChildren) {
                             if (item.Name == "ClearEPS") {
-                                Main.ClearEPS = Convert.ToBoolean(item.InnerText);
+                                bool.TryParse(item.InnerText, out bool result);
+                                Main.ClearEPS = result;
                             } else if (item.Name == "Retry") {
-                                Main.Retry = Convert.ToBoolean(item.InnerText);
+                                bool.TryParse(item.InnerText, out bool result);
+                                Main.Retry = result;
                             } else if (item.Name == "RetryTimes") {
-                                Main.RetryTimes = Convert.ToInt32(item.InnerText);
+                                int.TryParse(item.InnerText, out int result);
+                                Main.RetryTimes = result;
+                            } else if (item.Name == "AutoRun") {
+                                bool.TryParse(item.InnerText, out bool result);
+                                Main.AutoRun = result;
                             }
                         }
                     } else if (node.Name == "DB") {
@@ -84,6 +91,7 @@ namespace EPSCaliProc {
 
                 foreach (XmlNode node in xnl) {
                     XmlNodeList xnlChildren = node.ChildNodes;
+                    // 只操作了只会在程序中被修改的配置项
                     if (node.Name == "Main") {
                         foreach (XmlNode item in xnlChildren) {
                             if (item.Name == "ClearEPS") {
@@ -92,20 +100,6 @@ namespace EPSCaliProc {
                                 item.InnerText = Main.Retry.ToString();
                             } else if (item.Name == "RetryTimes") {
                                 item.InnerText = Main.RetryTimes.ToString();
-                            }
-                        }
-                    } else if (node.Name == "DB") {
-                        foreach (XmlNode item in xnlChildren) {
-                            if (item.Name == "IP") {
-                                item.InnerText = DB.IP;
-                            } else if (item.Name == "Port") {
-                                item.InnerText = DB.Port;
-                            } else if (item.Name == "Name") {
-                                item.InnerText = DB.Name;
-                            } else if (item.Name == "UserID") {
-                                item.InnerText = DB.UserID;
-                            } else if (item.Name == "Pwd") {
-                                item.InnerText = DB.Pwd;
                             }
                         }
                     }

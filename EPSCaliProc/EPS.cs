@@ -7,6 +7,18 @@ using System.Threading;
 using System.Windows.Threading;
 
 namespace EPSCaliProc {
+    // 声明委托
+    public delegate void EndEventHandler(Object sender, EndEventArgs e);
+
+    // 结束事件返回的结果参数
+    public class EndEventArgs : EventArgs
+    {
+        public readonly int iRet;
+        public EndEventArgs(int iRet) {
+            this.iRet = iRet;
+        }
+    }
+
     public class EPS {
         public string StrVIN { get; set; }
         bool IsClientRun { get; set; }
@@ -29,6 +41,9 @@ namespace EPSCaliProc {
         readonly LogBox Log;
         readonly Config Cfg;
 
+        // 声明结束事件
+        public event EndEventHandler End;
+
         public EPS(string StrDirTrace, string StrDirXML, string StrVIN, Config Cfg, LogBox Log) {
             Vci = new VciClient(StrDirTrace, StrDirXML, Log);
             IsClientRun = false;
@@ -42,15 +57,20 @@ namespace EPSCaliProc {
         }
 
         ~EPS() {
-            if (IsClientRun) {
-                Close();
-            }
+            Close();
         }
 
-        public int Close() {
+        public void Close() {
             int iRet = 0;
-            iRet = Vci.Close();
-            return iRet;
+            if (IsClientRun) {
+                iRet = Vci.Close();
+                IsClientRun = false;
+            }
+            // 建立 EndEventArgs 对象。
+            EndEventArgs e = new EndEventArgs(iRet);
+            // 触发End事件
+            End?.Invoke(this, e);
+            return;
         }
 
         public void Run() {
@@ -63,8 +83,8 @@ namespace EPSCaliProc {
             if (iRet == 0) {
                 Log.ShowLog("=> StartService success");
                 iRet = Vci.StartDevice();
+                IsClientRun = true;
                 if (iRet == 0) {
-                    IsClientRun = true;
                     Log.ShowLog("==> StartDevice success");
                 } else {
                     Thread.Sleep(200);
@@ -81,11 +101,11 @@ namespace EPSCaliProc {
                 }
             } else {
                 Log.ShowLog("=> StartService failed", LogBox.Level.error);
+                Close();
                 return;
             }
             EPSCaliRun();
             Close();
-            IsClientRun = false;
         }
 
         int DiagSessionControl(byte mode) {
@@ -174,8 +194,16 @@ namespace EPSCaliProc {
             iRet = DiagSessionControl(1);
 
             // step 2
-            iRet = TestPresent();
-            iRet = DiagSessionControl(3);
+            iRet += TestPresent();
+            iRet += DiagSessionControl(3);
+
+#if !DEBUG
+            if (iRet != 0)
+            {
+                Log.ShowLog(string.Format("===> EPS can't be accessed!"), LogBox.Level.error);
+                return;
+            }
+#endif
 
             // step 3
             int did = 0xF18C;

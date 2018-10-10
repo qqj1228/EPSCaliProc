@@ -71,8 +71,8 @@ namespace EPSCaliProc {
             if (iRet == 0) {
                 Log.ShowLog("=> StartService success");
                 iRet = Vci.StartDevice();
+                IsClientRun = true;
                 if (iRet == 0) {
-                    IsClientRun = true;
                     Log.ShowLog("==> StartDevice success");
                 } else {
                     Thread.Sleep(200);

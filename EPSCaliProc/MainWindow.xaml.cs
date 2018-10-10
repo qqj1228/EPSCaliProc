@@ -54,8 +54,38 @@ namespace EPSCaliProc {
             Cfg = new Config(Log);
             InitUI();
 
+            // 获取程序第一个参数中传进来的VIN码
+            if (Application.Current.Properties["VIN"] != null) {
+                StrVIN = Application.Current.Properties["VIN"].ToString();
+            }
+
             EPSCali = new EPS("vci_trace", "vci_config", StrVIN, Cfg, Log);
             EPBCali = new EPB("vci_trace", "vci_config", StrVIN, Cfg, Log);
+
+            // 注册结束事件处理函数
+            EPSCali.End += OnEnd;
+
+            if (Cfg.Main.AutoRun) {
+                Log.ShowLog("====== EPS标定开始（自动）======");
+                Task.Factory.StartNew(() => {
+                    EPSCali.Run();
+                });
+            }
+        }
+
+        // 结束事件处理函数
+        public void OnEnd(Object sender, EPSCaliProc.EndEventArgs e) {
+            if (Cfg.Main.AutoRun) {
+                EPS eps = (EPS)sender;
+                Log.ShowLog(string.Format("The EPSCali ended, iRet = {0}", e.iRet));
+                Log.ShowLog("This application will be closed after 3 seconds...");
+                Thread.Sleep(1000);
+                Log.ShowLog("This application will be closed after 2 seconds...");
+                Thread.Sleep(1000);
+                Log.ShowLog("This application will be closed after 1 seconds...");
+                Thread.Sleep(1000);
+                Log.ShowLog("Close!");
+            }
         }
 
         private void InitUI() {
@@ -66,7 +96,7 @@ namespace EPSCaliProc {
 
         private void BtnEPSStart_Click(object sender, RoutedEventArgs e) {
             EPSCali.StrVIN = this.tbxVIN.Text;
-            Log.ShowLog("====== EPS标定开始 ======");
+            Log.ShowLog("====== EPS标定开始（手动）======");
             Task.Factory.StartNew(() => {
                 EPSCali.Run();
             });
@@ -77,10 +107,6 @@ namespace EPSCaliProc {
         }
 
         private void LogBox_Loaded(object sender, RoutedEventArgs e) {
-            // 获取程序参数中传进来的VIN码
-            if (Application.Current.Properties["VIN"] != null) {
-                StrVIN = Application.Current.Properties["VIN"].ToString();
-            }
             this.tbxVIN.Text = StrVIN;
         }
 
@@ -88,7 +114,7 @@ namespace EPSCaliProc {
             EPBCali.StrVIN = this.tbxVIN.Text;
             EPBCali.StrSoftwareVer = this.tbxSoftwareVer.Text;
             EPBCali.StrHardwareVer = this.tbxHardwareVer.Text;
-            Log.ShowLog("====== EPB标定开始 ======");
+            Log.ShowLog("====== EPB标定开始（手动）======");
             Task.Factory.StartNew(() => {
                 EPBCali.Run();
             });
@@ -157,6 +183,9 @@ namespace EPSCaliProc {
                 }
                 this.Para.Inlines.Add(run);
                 this.rbxLog.ScrollToEnd();
+                if (strLog.Contains("Close!")) {
+                    Application.Current.Shutdown();
+                }
             }));
         }
 

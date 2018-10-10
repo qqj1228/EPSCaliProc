@@ -3,6 +3,7 @@
     <ClearEPS>True</ClearEPS>
     <Retry>True</Retry>
     <RetryTimes>3</RetryTimes>
+    <AutoRun>True</AutoRun>
   </Main>
   <DB>
     <IP>127.0.0.1</IP>
