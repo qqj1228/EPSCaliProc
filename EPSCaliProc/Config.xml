@@ -7,7 +7,7 @@
   </Main>
   <DB>
     <IP>127.0.0.1</IP>
-    <Port>2272</Port>
+    <Port>1433</Port>
     <Name>JAC</Name>
     <UserID>sa</UserID>
     <Pwd>sh49</Pwd>
