@@ -7,6 +7,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -50,6 +51,7 @@ namespace EPSCaliProc {
 
         public MainWindow() {
             InitializeComponent();
+            this.Title += " - Ver: " + MainFileVersion.AssemblyVersion.ToString();
             // ckbxVIN绑定的必要前提
             this.ckbxVIN.DataContext = this;
 
@@ -276,4 +278,20 @@ namespace EPSCaliProc {
             }));
         }
     }
+
+    // 获取文件版本类
+    public class MainFileVersion {
+        public static Version AssemblyVersion {
+            get { return ((Assembly.GetEntryAssembly()).GetName()).Version; }
+        }
+
+        public static Version AssemblyFileVersion {
+            get { return new Version(FileVersionInfo.GetVersionInfo(Assembly.GetEntryAssembly().Location).FileVersion); }
+        }
+
+        public static string AssemblyInformationalVersion {
+            get { return FileVersionInfo.GetVersionInfo(Assembly.GetEntryAssembly().Location).ProductVersion; }
+        }
+    }
+
 }

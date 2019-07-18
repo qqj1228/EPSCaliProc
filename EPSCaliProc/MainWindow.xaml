@@ -64,7 +64,7 @@
                 <RowDefinition Height="10"/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
-            <StackPanel Grid.Row="0" VerticalAlignment="Center">
+            <StackPanel Grid.Row="0">
                 <Label Content="VIN 号："/>
                 <TextBox x:Name="tbxVIN" Text="VIN Code" TextWrapping="Wrap" VerticalAlignment="Center"/>
                 <CheckBox x:Name="ckbxVIN" IsChecked="{Binding Path=IsManualVIN}" Content="手动输入 VIN 号" VerticalAlignment="Center" Margin="0,7,0,0" Checked="CbxVIN_Checked"/>
