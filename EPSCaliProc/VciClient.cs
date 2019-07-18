@@ -39,7 +39,7 @@ namespace EPSCaliProc {
         public int StopService() {
             int iRet = 0;
             if (IsServiceOpen) {
-                Log.ShowLog("=> StopService...\n");
+                Log.ShowLog("==> StopService...");
                 iRet = vciApp.AppServer.stopService();
             }
             return iRet;
@@ -92,7 +92,7 @@ namespace EPSCaliProc {
         public int StopDevice() {
             int iRet = 0;
             if (IsDeviceOpen) {
-                Log.ShowLog("==> StopDevice...\n");
+                Log.ShowLog("==> StopDevice...");
                 int iDeviceID = 1;
                 iRet = vciApp.AppServer.avtMcDevice("DEVICE_CLOSE", iDeviceID);
             }

@@ -15,10 +15,8 @@ namespace EPSCaliProc {
         }
 
         public struct MainConfig {
-            public bool ClearEPS { get; set; }
-            public bool Retry { get; set; }
-            public int RetryTimes { get; set; }
             public bool AutoRun { get; set; }
+            public int Interval { get; set; }
         }
 
         public DBConfig DB;
@@ -33,7 +31,7 @@ namespace EPSCaliProc {
         }
 
         ~Config() {
-            SaveConfig();
+            //SaveConfig();
         }
 
         void LoadConfig() {
@@ -47,18 +45,12 @@ namespace EPSCaliProc {
                     XmlNodeList xnlChildren = node.ChildNodes;
                     if (node.Name == "Main") {
                         foreach (XmlNode item in xnlChildren) {
-                            if (item.Name == "ClearEPS") {
-                                bool.TryParse(item.InnerText, out bool result);
-                                Main.ClearEPS = result;
-                            } else if (item.Name == "Retry") {
-                                bool.TryParse(item.InnerText, out bool result);
-                                Main.Retry = result;
-                            } else if (item.Name == "RetryTimes") {
-                                int.TryParse(item.InnerText, out int result);
-                                Main.RetryTimes = result;
-                            } else if (item.Name == "AutoRun") {
+                            if (item.Name == "AutoRun") {
                                 bool.TryParse(item.InnerText, out bool result);
                                 Main.AutoRun = result;
+                            } else if (item.Name == "Interval") {
+                                int.TryParse(item.InnerText, out int result);
+                                Main.Interval = result;
                             }
                         }
                     } else if (node.Name == "DB") {
@@ -94,13 +86,6 @@ namespace EPSCaliProc {
                     // 只操作了只会在程序中被修改的配置项
                     if (node.Name == "Main") {
                         foreach (XmlNode item in xnlChildren) {
-                            if (item.Name == "ClearEPS") {
-                                item.InnerText = Main.ClearEPS.ToString();
-                            } else if (item.Name == "Retry") {
-                                item.InnerText = Main.Retry.ToString();
-                            } else if (item.Name == "RetryTimes") {
-                                item.InnerText = Main.RetryTimes.ToString();
-                            }
                         }
                     }
                 }

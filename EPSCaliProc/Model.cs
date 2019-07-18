@@ -49,57 +49,97 @@ namespace EPSCaliProc {
                     str += "\n";
                 }
                 Log.ShowLog(str);
+                sqlConn.Close();
             }
         }
 
-        public void WriteResult(string StrTable, string StrVIN, string StrResult, int RoutineStatus, int RoutineResult, string StrDTC) {
-            string StrSQL = "insert " + StrTable + " values ('";
+        public void WriteCaliResult(string StrVIN, string strECU, string StrResult, string NRCOrResult, string StrDTC) {
+            string StrSQL = "insert CaliProcResult values ('";
             StrSQL += StrVIN + "', '";
             StrSQL += DateTime.Now.ToString("yyyy-MM-dd") + "', '";
             StrSQL += DateTime.Now.ToLongTimeString() + "', '";
+            StrSQL += strECU + "', '";
             StrSQL += StrResult + "', '";
-            StrSQL += RoutineStatus.ToString("X2") + "', '";
-            StrSQL += RoutineResult.ToString("X2") + "', '";
+            StrSQL += NRCOrResult + "', '";
             StrSQL += StrDTC + "')";
 
             using (SqlConnection sqlConn = new SqlConnection(StrConn)) {
                 SqlCommand sqlCmd = new SqlCommand(StrSQL, sqlConn);
                 try {
                     sqlConn.Open();
-                    Log.ShowLog(string.Format("===> T-SQL: {0}", StrSQL));
-                    Log.ShowLog(string.Format("===> EPSCaliProc Done. Insert {0} record(s)", sqlCmd.ExecuteNonQuery()));
+                    Log.ShowLog(string.Format("==> T-SQL: {0}", StrSQL));
+                    Log.ShowLog(string.Format("==> Writed calibration result. Insert {0} record(s)", sqlCmd.ExecuteNonQuery()));
                 } catch (Exception e) {
-                    Log.ShowLog("===> ERROR: " + e.Message, LogBox.Level.error);
+                    Log.ShowLog("==> SQL ERROR: " + e.Message, LogBox.Level.error);
+                    Log.ShowLog("==> Wrong SQL: " + StrSQL, LogBox.Level.error);
+                } finally {
+                    sqlConn.Close();
                 }
             }
         }
 
-        public void WriteEPBResult(string StrTable, string StrVIN, string[] strResult, string strDTC) {
-            string strAllResult = "O";
-            string StrSQL = "insert " + StrTable + " values ('";
-            StrSQL += StrVIN + "', '";
-            StrSQL += DateTime.Now.ToString("yyyy-MM-dd") + "', '";
-            StrSQL += DateTime.Now.ToLongTimeString() + "', '";
-            for (int i = 0; i < 5; i++) {
-                if (strResult[i] != "O") {
-                    strAllResult = "X";
-                    break;
-                }
-            }
-            StrSQL += strAllResult + "', '";
-            for (int i = 0; i < 5; i++) {
-                StrSQL += strResult[i] + "', '";
-            }
-            StrSQL += strDTC + "')";
-
+        public string GetVehicleType(string strVIN) {
+            string ret = "";
+            string StrSQL = "select VehicleType from VehicleInfo where VIN = '" + strVIN + "'";
             using (SqlConnection sqlConn = new SqlConnection(StrConn)) {
                 SqlCommand sqlCmd = new SqlCommand(StrSQL, sqlConn);
                 try {
                     sqlConn.Open();
-                    Log.ShowLog(string.Format("===> T-SQL: {0}", StrSQL));
-                    Log.ShowLog(string.Format("===> EPBCaliProc Done. Insert {0} record(s)", sqlCmd.ExecuteNonQuery()));
+                    SqlDataReader sqlData = sqlCmd.ExecuteReader();
+                    if (sqlData.Read()) {
+                        ret = sqlData.GetString(0);
+                    }
+                    Log.ShowLog(string.Format("==> T-SQL: {0}", StrSQL));
+                    Log.ShowLog(string.Format("==> Get vehicle type: {0}", ret));
                 } catch (Exception e) {
-                    Log.ShowLog("===> ERROR: " + e.Message, LogBox.Level.error);
+                    Log.ShowLog("==> SQL ERROR: " + e.Message, LogBox.Level.error);
+                    Log.ShowLog("==> Wrong SQL: " + StrSQL, LogBox.Level.error);
+                } finally {
+                    sqlConn.Close();
+                }
+                return ret;
+            }
+        }
+
+        /// <summary>
+        /// 获取标定状态，返回值为2个元素的string数组，[0]：VIN号，[1]：status
+        /// </summary>
+        /// <returns></returns>
+        public string[] GetCaliStatus() {
+            string[] ret = new string[2];
+            string StrSQL = "select VIN, Status from CaliProcStatus";
+            using (SqlConnection sqlConn = new SqlConnection(StrConn)) {
+                SqlCommand sqlCmd = new SqlCommand(StrSQL, sqlConn);
+                try {
+                    sqlConn.Open();
+                    SqlDataReader sqlData = sqlCmd.ExecuteReader();
+                    while (sqlData.Read()) {
+                        ret[0] = sqlData.GetString(0);
+                        ret[1] = sqlData.GetInt32(1).ToString();
+                    }
+                } catch (Exception e) {
+                    Log.ShowLog("==> SQL ERROR: " + e.Message, LogBox.Level.error);
+                    Log.ShowLog("==> Wrong SQL: " + StrSQL, LogBox.Level.error);
+                } finally {
+                    sqlConn.Close();
+                }
+            }
+            return ret;
+        }
+
+        public void DeleteCaliStatus() {
+            string StrSQL = "delete from CaliProcStatus";
+            using (SqlConnection sqlConn = new SqlConnection(StrConn)) {
+                SqlCommand sqlCmd = new SqlCommand(StrSQL, sqlConn);
+                try {
+                    sqlConn.Open();
+                    Log.ShowLog(string.Format("==> T-SQL: {0}", StrSQL));
+                    Log.ShowLog(string.Format("==> Delete {0} record(s) in CaliProcStatus.", sqlCmd.ExecuteNonQuery()));
+                } catch (Exception e) {
+                    Log.ShowLog("==> SQL ERROR: " + e.Message, LogBox.Level.error);
+                    Log.ShowLog("==> Wrong SQL: " + StrSQL, LogBox.Level.error);
+                } finally {
+                    sqlConn.Close();
                 }
             }
         }

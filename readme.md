@@ -6,6 +6,7 @@
 	- `Main/ClearEPS` ：主界面 `清除上次EPS标定结果`，选项: `True` 、`False`
 	- `Main/Retry` ：主界面 `EPS/EPB标定出错后重试`，选项: `True` 、`False`
 	- `Main/RetryTimes` ：主界面 `重试次数` 输入框
+	- `Main/AutoRun` ：程序是否自动运行，选项: `True` 、`False`，若为 `True` 的话，程序打开后会自动进入EPS标定过程，标定完成后会自动关闭无需人工干预
 	- `DB/IP` ：SQL Server服务器IP地址
 	- `DB/Port` ：SQL Server服务器端口号
 	- `DB/Name` ：主程序操作的SQL Server数据库名称

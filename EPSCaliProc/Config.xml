@@ -1,9 +1,7 @@
 <Config>
   <Main>
-    <ClearEPS>True</ClearEPS>
-    <Retry>True</Retry>
-    <RetryTimes>3</RetryTimes>
     <AutoRun>True</AutoRun>
+    <Interval>1000</Interval>
   </Main>
   <DB>
     <IP>127.0.0.1</IP>

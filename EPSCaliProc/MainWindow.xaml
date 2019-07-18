@@ -63,37 +63,16 @@
                 <RowDefinition/>
                 <RowDefinition Height="10"/>
                 <RowDefinition/>
-                <RowDefinition Height="10"/>
-                <RowDefinition/>
-                <RowDefinition Height="10"/>
-                <RowDefinition/>
-                <RowDefinition Height="10"/>
-                <RowDefinition/>
-                <RowDefinition Height="10"/>
-                <RowDefinition/>
             </Grid.RowDefinitions>
-            <StackPanel Grid.Row="0">
-                <Label Content="VIN 码："/>
+            <StackPanel Grid.Row="0" VerticalAlignment="Center">
+                <Label Content="VIN 号："/>
                 <TextBox x:Name="tbxVIN" Text="VIN Code" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                <CheckBox x:Name="ckbxVIN" IsChecked="{Binding Path=IsManualVIN}" Content="手动输入 VIN 号" VerticalAlignment="Center" Margin="0,7,0,0" Checked="CbxVIN_Checked"/>
             </StackPanel>
-            <CheckBox Grid.Row="2" x:Name="ckbxClearCali" Content="清除上次EPS标定结果" VerticalAlignment="Center" Click="CkbxClearCali_Click"/>
-            <CheckBox Grid.Row="4" x:Name="ckbxRepeatCali" Content="EPS/EPB标定出错后重试" VerticalAlignment="Center" Click="CkbxRepeatCali_Click"/>
-            <StackPanel Grid.Row="6">
-                <Label Content="重试次数：" IsEnabled="{Binding ElementName=ckbxRepeatCali, Path=IsChecked}"/>
-                <TextBox x:Name="tbxRetrialTimes" Text="Times" TextWrapping="Wrap" VerticalAlignment="Center"
-                         IsEnabled="{Binding ElementName=ckbxRepeatCali, Path=IsChecked}" LostFocus="TbxRetrialTimes_LostFocus"/>
-            </StackPanel>
-            <Button Grid.Row="8" x:Name="btnEPSStart" Content="开始EPS标定" Click="BtnEPSStart_Click" FontSize="12"/>
-            <StackPanel Grid.Row="10">
-                <Label Content="EPB软件版本号："/>
-                <TextBox x:Name="tbxSoftwareVer" TextWrapping="Wrap" VerticalAlignment="Center"/>
-            </StackPanel>
-            <StackPanel Grid.Row="12">
-                <Label Content="EPB硬件版本号："/>
-                <TextBox x:Name="tbxHardwareVer" TextWrapping="Wrap" VerticalAlignment="Center"/>
-            </StackPanel>
-            <Button Grid.Row="14" x:Name="btnEPBStart" Content="开始EPB标定" Click="BtnEPBStart_Click" FontSize="12"/>
-            <Button Grid.Row="16" x:Name="btnClear" Content="清除记录" Click="BtnClear_Click" FontSize="12"/>
+            <Button Grid.Row="2" x:Name="btn7SEPSStart" Content="手动 7S EPS 标定" Click="Btn7SEPSStart_Click" FontSize="12"/>
+            <Button Grid.Row="4" x:Name="btn7SEPBStart" Content="手动 7S EPB 标定" Click="Btn7SEPBStart_Click" FontSize="12"/>
+            <Button Grid.Row="6" x:Name="btn7LEPSStart" Content="手动 7L EPS 标定" Click="Btn7LEPSStart_Click" FontSize="12"/>
+            <Button Grid.Row="8" x:Name="btnClear" Content="手动清除信息" Click="BtnClear_Click" FontSize="12"/>
         </Grid>
     </Grid>
 </ctrls:MetroWindow>
