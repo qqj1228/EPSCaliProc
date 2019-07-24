@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:EPSCaliProc"
         xmlns:ctrls="http://metro.mahapps.com/winfx/xaml/controls"
         mc:Ignorable="d"
-        Title="EPS_EPB下线标定" Height="600" Width="800">
+        Title="EPS_EPB下线标定">
     <ctrls:MetroWindow.IconTemplate>
         <DataTemplate>
             <Grid>
@@ -63,6 +63,8 @@
                 <RowDefinition/>
                 <RowDefinition Height="10"/>
                 <RowDefinition/>
+                <RowDefinition Height="10"/>
+                <RowDefinition/>
             </Grid.RowDefinitions>
             <StackPanel Grid.Row="0">
                 <Label Content="VIN 号："/>
@@ -73,6 +75,7 @@
             <Button Grid.Row="4" x:Name="btn7SEPBStart" Content="手动 7S EPB 标定" Click="Btn7SEPBStart_Click" FontSize="12"/>
             <Button Grid.Row="6" x:Name="btn7LEPSStart" Content="手动 7L EPS 标定" Click="Btn7LEPSStart_Click" FontSize="12"/>
             <Button Grid.Row="8" x:Name="btnClear" Content="手动清除信息" Click="BtnClear_Click" FontSize="12"/>
+            <Button Grid.Row="10" x:Name="btnReset" Content="重置标定状态" Click="BtnReset_Click" FontSize="12"/>
         </Grid>
     </Grid>
 </ctrls:MetroWindow>

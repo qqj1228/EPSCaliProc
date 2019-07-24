@@ -52,6 +52,7 @@ namespace EPSCaliProc {
         public MainWindow() {
             InitializeComponent();
             this.Title += " - Ver: " + MainFileVersion.AssemblyVersion.ToString();
+            this.WindowState = WindowState.Maximized;
             // ckbxVIN绑定的必要前提
             this.ckbxVIN.DataContext = this;
 
@@ -226,6 +227,12 @@ namespace EPSCaliProc {
 
         private void CbxVIN_Checked(object sender, RoutedEventArgs e) {
             //this.IsManualVIN = (bool)this.ckbxVIN.IsChecked;
+        }
+
+        private void BtnReset_Click(object sender, RoutedEventArgs e)
+        {
+            Model db = new Model(Cfg, Log);
+            db.DeleteCaliStatus();
         }
     }
 
